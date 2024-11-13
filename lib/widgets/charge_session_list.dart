@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:id_charge_tng/model/charge_session.dart';
+import 'package:id_charge_tng/services/dto_testdata_factory.dart';
 import 'package:id_charge_tng/widgets/charge_session_card.dart';
+
+import '../model/charge_session_dto.dart';
 
 class ChargeSessionList extends StatefulWidget {
   const ChargeSessionList({super.key});
@@ -10,42 +13,34 @@ class ChargeSessionList extends StatefulWidget {
 }
 
 class _ChargeSessionListState extends State<ChargeSessionList> {
-  
+
+  ChargeSessionDto newChargeDto = ChargeSessionDto(
+      startOfChargeDate: DateTime.now(),
+      endOfChargeDate: DateTime.now().add(Duration(minutes: 90)),
+      chargeProvider: 'Ionity',
+      chargeType: 'CCS 150kw',
+      mileage: 99999,
+      tripLength: 123,
+      kwhCharged: 17.5,
+      kwhPaid: 19.2,
+      costOfCharge: 9.88,
+      bcConsumption: 16.5,
+      socStart: 35,
+      socEnd: 90,
+      latitude: 1.2345678,
+      longitude: 45.123456
+  );
+
   List<ChargeSession> sessions = [
-    ChargeSession(chargeDate: '14.10.2024 17:00',
-      chargeProvider: 'Wallbox',
-      chargeType: 'AC',
-      mileage: '14.456',
-      tripLength: '221',
-      kwhCharged: '34,5',
-      kwhPaid: '15,25 €',
-      kwhChargedInternal: '31',
-      bcConsumption: '18,0',
-      targetSoc: '80 %'),
-    ChargeSession(chargeDate: '20.10.2024 12:00',
-      chargeProvider: 'EnBw',
-      chargeType: 'HPC 150',
-      mileage: '15.456',
-      tripLength: '95',
-      kwhCharged: '24,5',
-      kwhPaid: '10,25 €',
-      kwhChargedInternal: '21',
-      bcConsumption: '18,0',
-      targetSoc: '100 %'),
-    ChargeSession(chargeDate: '21.10.2024 12:00',
-      chargeProvider: 'EWE_Go',
-      chargeType: 'HPC 150',
-      mileage: '15.456',
-      tripLength: '95',
-      kwhCharged: '24,5',
-      kwhPaid: '10,25 €',
-      kwhChargedInternal: '21',
-      bcConsumption: '18,0',
-      targetSoc: '100 %'),
+    ChargeSession.dto(DtoTestdataFactory.chargeSessionDto1),
+    ChargeSession.dto(DtoTestdataFactory.chargeSessionDto2),
+    ChargeSession.dto(DtoTestdataFactory.chargeSessionDto3),
   ];
+
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.grey[300],
       appBar: AppBar(
@@ -64,8 +59,15 @@ class _ChargeSessionListState extends State<ChargeSessionList> {
           backgroundColor: Colors.blue[400],
           foregroundColor: Colors.white,
           child: Icon(Icons.add),
-          onPressed: () {
+          onPressed: () async {
+            final result = await Navigator.pushNamed(context, '/chargeform', arguments: newChargeDto);
 
+            if (result != null) {
+              ChargeSessionDto newSession = result as ChargeSessionDto;
+              setState(() {
+                sessions.add(ChargeSession.dto(newSession));
+              });
+            }
         }),
     );
   }

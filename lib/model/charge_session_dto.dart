@@ -14,7 +14,6 @@ class ChargeSessionDto {
   double? bcConsumption;
   int? socStart;
   int? socEnd;
-  int? targetSoc;
   double? latitude;
   double? longitude;
 
@@ -33,7 +32,6 @@ class ChargeSessionDto {
       this.bcConsumption,
       this.socStart,
       this.socEnd,
-      this.targetSoc,
       this.latitude,
       this.longitude});
   
