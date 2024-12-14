@@ -6,9 +6,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  //await findSystemLocale();
   await initializeDateFormatting('de_DE', null);
-  //initializeDateFormatting('de_DE', null).then((_) =>
   runApp(
     MaterialApp(
         initialRoute: '/',
