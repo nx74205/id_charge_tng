@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:id_charge_tng/model/charge_session_dto.dart';
+import 'package:id_charge_tng/services/charge_session_service.dart';
 import 'package:intl/intl.dart';
 import 'package:date_field/date_field.dart';
 
@@ -13,91 +14,178 @@ class ChargeSessionForm extends StatefulWidget {
 
 class _ChargeSessionFormState extends State<ChargeSessionForm> {
 
+  final _chargeSessionService = new ChargeSessionService();
+
   final _formGlobalKey = GlobalKey<FormState>();
   final dateFormat = DateFormat('dd-MM-yyyy HH:mm');
   final numFormat = NumberFormat("#,###.##", 'de-DE');
 
-  final _controller = TextEditingController();
+  bool _formHasChanged = false;
 
-  List<String> _chargeProviders = [
-    'Zuhause',
-    'EnBw',
-    'Ionity',
-    'EWE Go',
-    'Sonstige'
-  ];
+  final _mileageTextcontroller = TextEditingController();
+  final _bcTextController = TextEditingController();
+  final _fromSocTextController = TextEditingController();
+  final _toSocTextController = TextEditingController();
+  final _tripLengthTextController = TextEditingController();
+  final _kwhChargedTextController = TextEditingController();
+  final _costOfChargeTextController = TextEditingController();
 
-  List<String> _chargeTypes = [
-    'AC',
-    'CCS',
-    'CCS 150kw',
-    'CCS HPC'
-  ];
+  bool _isLocked = true;
+  bool _isFirstBuild = true;
 
-  String _chargeType = '';
-  String _chargeProvider = '';
+  String? _chargeType = '';
+  String? _chargeProvider = '';
 
-  ChargeSessionDto? data;
+  late int _clientObjectVersion;
+  late int _serverObjectVersion;
+
+  ChargeSessionDto? _data;
+  late Map _arguments;
 
   @override
   Widget build(BuildContext context) {
 
-    data = ModalRoute.of(context)?.settings.arguments as ChargeSessionDto;
+    List<String> chargeProviders = _chargeSessionService.CHARGE_PROVIDERS;
+    List<String> chargeTypes = _chargeSessionService.CHARGE_TYPES;
 
-    _chargeType = (_chargeTypes.contains(data?.chargeType) ? data?.chargeType : _chargeTypes[0])!;
-    _chargeProvider = (_chargeProviders.contains(data?.chargeProvider) ? data?.chargeProvider : _chargeProvider[0])!;
+    if (_isFirstBuild) {
+      //_data = ModalRoute.of(context)?.settings.arguments as ChargeSessionDto;
 
-    _controller.text = data!.mileage.toString();
-    _controller.selection = TextSelection(
+      _arguments = ModalRoute.of(context)?.settings.arguments as Map;
+      _data = _arguments['result'];
+
+      _clientObjectVersion = _data?.clientObjectVersion ?? 0;
+      _serverObjectVersion = _data?.serverObjectVersion ?? 0;
+      _isLocked = _data?.locked ?? true;
+
+
+      _bcTextController.text = numFormat.format(_data?.bcConsumption);
+      _fromSocTextController.text = _data!.socStart.toString();
+      _toSocTextController.text = _data!.socEnd.toString();
+      _tripLengthTextController.text = (_data?.tripLength != null ? _data?.tripLength.toString() : '')!;
+
+      if (!chargeTypes.contains(_data?.chargeType)) {
+        _chargeType = chargeTypes[0];
+        _data?.chargeType = chargeTypes[0];
+      } else {
+        _chargeType = _data?.chargeType;
+      }
+
+      if (!chargeProviders.contains(_data?.chargeProvider)) {
+        _chargeProvider = chargeProviders[0];
+        _data?.chargeProvider = chargeProviders[0];
+      } else {
+        _chargeProvider = _data?.chargeProvider;
+      }
+
+      _isFirstBuild = false;
+    }
+
+    _mileageTextcontroller.text = _data!.mileage.toString();
+    _mileageTextcontroller.selection = TextSelection(
       baseOffset: 0,
-      extentOffset: data!.mileage.toString().length,
+      extentOffset: _data!.mileage.toString().length,
     );
+    _kwhChargedTextController.text = numFormat.format(_data?.chargedKwPaid);
+    _costOfChargeTextController.text = numFormat.format(_data?.costOfCharge);
 
    return Scaffold(
-        backgroundColor: Colors.grey[300],
-        appBar: AppBar(
-          backgroundColor: Colors.blue[400],
-          foregroundColor: Colors.white,
-          title: Text('Ladevorgang erfassen'),
-          centerTitle: true,
-          leading: BackButton(
-            onPressed: () => showDialog<ChargeSessionDto>(
-              context: context,
-              builder: (BuildContext context) => AlertDialog(
-                title: const Text('Ladevorgang abbrechen'),
-                content: const Text('Ladevorgang ohne speichern beenden'),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context, data);
-                    }, //=> Navigator.pop(context, 'Cancel'),
-                    child: const Text('Weiter'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      int count = 0;
-                      Navigator.popUntil(context, (route) {
-                        return count++ == 2;
-                      });
-                      //=> Navigator.pop(context, 'OK'),
-                    },
-                    child: const Text('OK'),
-                  ),
-                ],
+      backgroundColor: Colors.grey[300],
+      appBar: AppBar(
+        backgroundColor: Colors.blue[400],
+        foregroundColor: Colors.white,
+        title: Text('Ladevorgang'),
+        centerTitle: true,
+        leading: BackButton(
+          onPressed: () => {
+            if (_formHasChanged) {
+              showDialog<ChargeSessionDto>(
+                context: context,
+                builder: (BuildContext context) => AlertDialog(
+                  title: const Text('Eingabe abbrechen'),
+                  content: const Text('Eingabe ohne speichern beenden?'),
+                  actions: <Widget>[
+                    TextButton(
+                      child: const Text('Weiter'),
+                      onPressed: () {
+                        Navigator.pop(context, _data);
+                      },
+                    ),
+                    TextButton(
+                      child: const Text('OK'),
+                      onPressed: () {
+                        int count = 0;
+                        Navigator.popUntil(context, (route) {
+                          return count++ == 2;
+                        });
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.done),
-              onPressed: () {
-                if (_formGlobalKey.currentState!.validate()) {
-                  _formGlobalKey.currentState!.save();
-                  Navigator.pop(context, data);
-                }
-              }),
-          ]
+            } else {
+              Navigator.pop(context)
+            }
+          }
         ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              setState(() {
+                if (_isLocked) {
+                  _isLocked = false;
+                } else {
+                  _isLocked = true;
+                }
+              });
+            },
+            icon: (_isLocked ? Icon(Icons.lock) : Icon(Icons.lock_open))),
+          IconButton(
+            icon: Icon(Icons.save),
+            onPressed: () {
+              if (_formGlobalKey.currentState!.validate()) {
+                _formGlobalKey.currentState!.save();
+                _saveData(syncNow: false);
+                _arguments['result'] = _data;
+                Navigator.pop(context, _arguments);
+              }
+            }),
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: () => {
+              showDialog<ChargeSessionDto>(
+                context: context,
+                builder: (BuildContext context) => AlertDialog(
+                  title: const Text('Eingabe abschließen'),
+                  content: const Text('Eingabe endgültig abschließen?'),
+                  actions: <Widget>[
+                    TextButton(
+                      child: const Text('Weiter'),
+                      onPressed: () {
+                        Navigator.pop(context, _data);
+                      },
+                    ),
+                    TextButton(
+                      child: const Text('OK'),
+                      onPressed: () {
+                        _saveData(syncNow: true);
+                        Navigator.popUntil(context, ((route) {
+                          if (route.settings.name == '/') {
+                            //(route.settings.arguments as Map)['result'] = _data;
+                            return true;
+                          } else {
+                            return false;
+                          }
+                        }));
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            },
+          )
+        ]
+      ),
       body: Card(
         color: Colors.white,
         margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
@@ -114,20 +202,22 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                 children: [
                   SizedBox(height: 20),
                   DateTimeFormField(
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
+                      enabled: !_isLocked,
                       filled: true,
                       fillColor: Colors.white,
-                      border: OutlineInputBorder(),
-                      label: Text('Start Ladesession'),
-                      prefixIcon: Icon(
+                      border: const OutlineInputBorder(),
+                      label: const Text('Start Ladesession'),
+                      prefixIcon: const Icon(
                               color: Colors.blue,
                               Icons.calendar_today_rounded
                             )
                     ),
-                    initialValue: data?.startOfChargeDate,
+                    initialValue: _data?.startOfChargeDate,
                     dateFormat: dateFormat,
                     onChanged: (DateTime? value) {
-                      data?.startOfChargeDate = value;
+                      _data?.startOfChargeDate = value;
+                      _formHasChanged = true;
                     },
                   ),
                   SizedBox(height: 20),
@@ -136,9 +226,10 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                       Expanded(
                         flex: 6,
                         child: TextFormField(
-                          controller: _controller,
+                          controller: _mileageTextcontroller,
                           autofocus: true,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
+                            enabled: !_isLocked,
                             suffixText: "Km",
                             filled: true,
                             fillColor: Colors.white,
@@ -146,30 +237,32 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                             label: Text('Kilometerstand'),
                           ),
                           textAlign: TextAlign.end,
-                          //initialValue: data?.mileage.toString(),
                           keyboardType: TextInputType.number,
                           inputFormatters: <TextInputFormatter>[
                             FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
                             LengthLimitingTextInputFormatter(7)
                           ],
-                          onTap: () => _controller.selection =
-                              TextSelection(baseOffset: 0, extentOffset: _controller.value.text.length),
+                          onTap: () => _mileageTextcontroller.selection =
+                              TextSelection(baseOffset: 0, extentOffset: _mileageTextcontroller.value.text.length),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Kilometerstand fehlt';
                             }
                             return null;
                           },
-                          onSaved: (value) {
-                            data?.mileage = int.parse(value!);
+                          onChanged: (value) {
+                            _data?.mileage = int.parse(value);
+                            _formHasChanged = true;
                           },
                         ),
                       ),
-                      const SizedBox(width: 20),
+                      const SizedBox(width: 5),
                       Expanded(
                         flex: 4,
                         child: TextFormField(
-                          decoration: const InputDecoration(
+                          controller: _tripLengthTextController,
+                          decoration: InputDecoration(
+                            enabled: !_isLocked,
                             suffixText: "Km",
                             filled: true,
                             fillColor: Colors.white,
@@ -181,16 +274,18 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                             LengthLimitingTextInputFormatter(4)
                           ],
                           textAlign: TextAlign.end,
-                          initialValue: data?.tripLength.toString(),
                           keyboardType: TextInputType.number,
+                          onTap: () => _tripLengthTextController.selection =
+                              TextSelection(baseOffset: 0, extentOffset: _tripLengthTextController.value.text.length),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Distanz fehlt';
                             }
                             return null;
                           },
-                          onSaved: (value) {
-                            data?.tripLength = int.parse(value!);
+                          onChanged: (value) {
+                            _data?.tripLength = int.parse(value);
+                            _formHasChanged = true;
                           },
                         ),
                       ),
@@ -208,7 +303,7 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                               border: OutlineInputBorder(),
                               label: Text('Ladetyp'),
                             ),
-                          items: _chargeTypes.map((p) {
+                          items: chargeTypes.map((p) {
                             return DropdownMenuItem(
                                 value: p,
                                 child: Text(p),
@@ -217,12 +312,13 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                           onChanged: (value){
                             setState(() {
                               _chargeType = value!;
-                              data?.chargeType = value;
+                              print(_chargeType);
                             });
+                            _formHasChanged = true;
                           },
                         ),
                       ),
-                      const SizedBox(width: 20),
+                      const SizedBox(width: 5),
                       Expanded(
                         child: DropdownButtonFormField(
                           value: _chargeProvider,
@@ -232,7 +328,7 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                             border: OutlineInputBorder(),
                             label: Text('Provider'),
                           ),
-                          items: _chargeProviders.map((p) {
+                          items: chargeProviders.map((p) {
                             return DropdownMenuItem(
                               value: p,
                               child: Text(p),
@@ -242,10 +338,11 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                             setState(() {
                               _chargeProvider = value!;
                             });
+                            _formHasChanged = true;
                           },
                         ),
                       ),
-              
+
                     ],
                   ),
                   const SizedBox(height: 15),
@@ -254,6 +351,7 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                       Expanded(
                         flex: 7,
                         child: TextFormField(
+                          controller: _bcTextController,
                           decoration: const InputDecoration(
                             suffixText: "kWh",
                             filled: true,
@@ -262,20 +360,22 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                             label: Text('BC Verbr.'),
                           ),
                           textAlign: TextAlign.end,
-                          initialValue: numFormat.format(data?.bcConsumption),
                           keyboardType: TextInputType.number,
                           inputFormatters:  <TextInputFormatter> [
                             FilteringTextInputFormatter.allow(RegExp(r'\d*,?\d*')),
                             LengthLimitingTextInputFormatter(5)
                           ],
+                          onTap: () => _bcTextController.selection =
+                              TextSelection(baseOffset: 0, extentOffset: _bcTextController.value.text.length),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Eingabe erforderlich';
                             }
                             return null;
                           },
-                          onSaved: (value) {
-                            data?.bcConsumption = double.parse(value!.replaceAll(',', '.'));
+                          onChanged: (value) {
+                            _data?.bcConsumption = double.parse(value.replaceAll(',', '.'));
+                            _formHasChanged = true;
                           },
                         )
                       ),
@@ -286,7 +386,9 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                       Expanded(
                           flex: 4,
                           child: TextFormField(
-                            decoration: const InputDecoration(
+                            controller: _fromSocTextController,
+                            decoration: InputDecoration(
+                              enabled: !_isLocked,
                               suffixText: "%",
                               filled: true,
                               fillColor: Colors.white,
@@ -294,31 +396,32 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                               label: Text('Von SOC'),
                             ),
                             textAlign: TextAlign.end,
-                            initialValue: data?.socStart.toString(),
                             keyboardType: TextInputType.number,
                             inputFormatters:  <TextInputFormatter> [
                               FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
                               LengthLimitingTextInputFormatter(2)
                             ],
+                            onTap: () => _fromSocTextController.selection =
+                                TextSelection(baseOffset: 0, extentOffset: _fromSocTextController.value.text.length),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Eingabe erforderlich';
                               }
                               return null;
                             },
-                            onSaved: (value) {
-                              data?.socStart = int.parse(value!);
+                            onChanged: (value) {
+                              _data?.socStart = int.parse(value);
+                              _formHasChanged = true;
                             },
                           )
                       ),
-                      Expanded(
-                        flex: 1,
-                        child: Container(),
-                      ),
+                      const SizedBox(width: 5),
                       Expanded(
                           flex: 4,
                           child: TextFormField(
-                            decoration: const InputDecoration(
+                            controller: _toSocTextController,
+                            decoration: InputDecoration(
+                              enabled: !_isLocked,
                               suffixText: "%",
                               filled: true,
                               fillColor: Colors.white,
@@ -326,20 +429,22 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                               label: Text('Bis SOC'),
                             ),
                             textAlign: TextAlign.end,
-                            initialValue: data?.socEnd.toString(),
                             keyboardType: TextInputType.number,
                             inputFormatters:  <TextInputFormatter> [
                               FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
                               LengthLimitingTextInputFormatter(3)
                             ],
+                            onTap: () => _toSocTextController.selection =
+                                TextSelection(baseOffset: 0, extentOffset: _toSocTextController.value.text.length),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Eingabe erforderlich';
                               }
                               return null;
                             },
-                            onSaved: (value) {
-                              data?.socEnd = int.parse(value!);
+                            onChanged: (value) {
+                              _data?.socEnd = int.parse(value);
+                              _formHasChanged = true;
                             },
                           )
                       ),
@@ -351,6 +456,7 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                       Expanded(
                         flex: 7,
                         child: TextFormField(
+                          controller: _kwhChargedTextController,
                           decoration: const InputDecoration(
                             suffixText: "kWh",
                             filled: true,
@@ -359,60 +465,81 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                             label: Text('Geladen'),
                           ),
                           textAlign: TextAlign.end,
-                          initialValue: numFormat.format(data?.kwhCharged),
                           keyboardType: TextInputType.number,
                           inputFormatters:  <TextInputFormatter> [
                             FilteringTextInputFormatter.allow(RegExp(r'\d*,?\d*')),
                             LengthLimitingTextInputFormatter(5)
                           ],
+                          onTap: () => _kwhChargedTextController.selection =
+                              TextSelection(baseOffset: 0, extentOffset: _kwhChargedTextController.value.text.length),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Eingabe erforderlich';
                             }
                             return null;
                           },
-                          onSaved: (value) {
-                            data?.kwhCharged = double.parse(value!.replaceAll(',', '.'));
+                          onChanged: (value) {
+                            _data?.chargedKwPaid = double.parse(value.replaceAll(',', '.'));
+                            _formHasChanged = true;
                           },
                         )
                       ),
+                      const SizedBox(width: 5),
                       Expanded(
-                        flex: 1,
-                        child: Container(),
+                        flex: 9,
+                        child: TextFormField(
+                          controller: _costOfChargeTextController,
+                          decoration: const InputDecoration(
+                            suffixIcon: Icon(
+                              Icons.euro_symbol,
+                              size: 20,
+                            ),
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(),
+                            label: Text('Gesamtpreis'),
+                          ),
+                          textAlign: TextAlign.end,
+                          keyboardType: TextInputType.number,
+                          inputFormatters:  <TextInputFormatter> [
+                            FilteringTextInputFormatter.allow(RegExp(r'\d*,?\d*')),
+                            LengthLimitingTextInputFormatter(6)
+                          ],
+                          onTap: () => _costOfChargeTextController.selection =
+                              TextSelection(baseOffset: 0, extentOffset: _costOfChargeTextController.value.text.length),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Eingabe erforderlich';
+                            }
+                            return null;
+                          },
+                          onChanged: (value) {
+                            _data?.costOfCharge = double.parse(value.replaceAll(',', '.'));
+                            _formHasChanged = true;
+                          },
+                        )
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+                  Row(
+                    children: [
                       Expanded(
                           flex: 9,
                           child: TextFormField(
+                            initialValue: _data?.chargingStatus,
                             decoration: const InputDecoration(
-                              suffixIcon: Icon(
-                                Icons.euro_symbol,
-                                size: 20,
-                              ),
+                              enabled: false,
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(),
-                              label: Text('Gesamtpreis'),
+                              label: Text('Ladestatus'),
                             ),
-                            textAlign: TextAlign.end,
-                            initialValue: numFormat.format(data?.costOfCharge),
-                            keyboardType: TextInputType.number,
-                            inputFormatters:  <TextInputFormatter> [
-                              FilteringTextInputFormatter.allow(RegExp(r'\d*,?\d*')),
-                              LengthLimitingTextInputFormatter(6)
-                            ],
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Eingabe erforderlich';
-                              }
-                              return null;
-                            },
-                            onSaved: (value) {
-                              data?.costOfCharge = double.parse(value!.replaceAll(',', '.'));
-                            },
+                            textAlign: TextAlign.left,
                           )
                       ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),
@@ -421,4 +548,18 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
       ),
     );
   }
+
+  _saveData({required bool syncNow}) {
+    if (syncNow) {
+      _data?.chargingStatus = "COMPLETED";
+    }
+    _data?.chargeType = _chargeType;
+    _data?.chargeProvider = _chargeProvider;
+    _data?.clientObjectVersion = _clientObjectVersion + 1;
+    _data?.serverObjectVersion = _serverObjectVersion;
+    _data?.locked = _isLocked;
+    _data?.hasChanged = true;
+  }
 }
+
+

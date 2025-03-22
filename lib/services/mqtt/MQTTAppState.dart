@@ -1,25 +1,30 @@
 
 import 'package:flutter/material.dart';
+import 'package:id_charge_tng/model/charge_session_dto.dart';
 
-enum MQTTAppConnectionState { connected, disconnected, connecting }
+enum MQTTAppConnectionState {connected, disconnected, connecting, notConfigured}
 
 class MQTTAppState with ChangeNotifier{
   MQTTAppConnectionState _appConnectionState = MQTTAppConnectionState.disconnected;
-  String _receivedText = '';
-  String _historyText = '';
 
-  void setReceivedText(String text) {
-    _receivedText = text;
-    _historyText = _historyText + '\n' + _receivedText;
+  final _receivedSessions = <int, ChargeSessionDto>{};
+
+  void setReceivedChargeSessions(ChargeSessionDto chargeSessionDto) {
+    _receivedSessions[chargeSessionDto.mileage!] = chargeSessionDto;
     notifyListeners();
   }
+
   void setAppConnectionState(MQTTAppConnectionState state) {
     _appConnectionState = state;
     notifyListeners();
   }
 
-  String get getReceivedText => _receivedText;
-  String get getHistoryText => _historyText;
+  void clearReceivedSessions() {
+    _receivedSessions.clear();
+  }
+
+  Map<int, ChargeSessionDto>? get getReceivedDtoSessions => _receivedSessions;
+
   MQTTAppConnectionState get getAppConnectionState => _appConnectionState;
 
 }
