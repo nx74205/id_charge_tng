@@ -35,7 +35,7 @@ class _ChargeSessionListState extends State<ChargeSessionList> {
       startOfChargeDate: DateTime.now(),
       mileage: 0,
       tripLength: 0,
-      kwhCharged: 0,
+      quantityChargedKwh: 0,
       chargedKwPaid: 0,
       costOfCharge: 0,
       bcConsumption: 0,
@@ -72,6 +72,7 @@ class _ChargeSessionListState extends State<ChargeSessionList> {
           if (chargeSessionDto.chargingStatus == "COMPLETED") {
             sessions.remove(mileage);
             _delChargeSession(mileage);
+            manager.deleteServerMessage(mileage);
           } else {
             if(sessions[mileage]!.clientObjectVersion <= clientObjectVersion!) {
               // via mqtt received session is newer then the session in our database
@@ -80,11 +81,12 @@ class _ChargeSessionListState extends State<ChargeSessionList> {
             } else {
               // our version is newer lets check the server...
               if (sessions[mileage]!.serverObjectVersion < serverObjectVersion!) {
-                chargeSessionDto.kwhCharged = sessions[mileage]?.chargeSessionDto.kwhCharged;
+                chargeSessionDto.chargedKwPaid = sessions[mileage]?.chargeSessionDto.chargedKwPaid;
                 chargeSessionDto.costOfCharge = sessions[mileage]?.chargeSessionDto.costOfCharge;
                 chargeSessionDto.bcConsumption = sessions[mileage]?.chargeSessionDto.bcConsumption;
                 chargeSessionDto.chargeProvider = sessions[mileage]?.chargeSessionDto.chargeProvider;
                 chargeSessionDto.chargeType = sessions[mileage]?.chargeSessionDto.chargeType;
+                sessions[mileage] = ChargeSession.dto(chargeSessionDto);
               } else {
                 manager.publish(mileage, jsonEncode(sessions[mileage]?.chargeSessionDto.toJson()));
               }

@@ -9,10 +9,15 @@ class ChargeSessionDto {
   String? chargeType;
   int? mileage;
   int? tripLength;
-  double? kwhCharged;
+  double? quantityChargedKwh;
   double? chargedKwPaid;
   double? costOfCharge;
   double? bcConsumption;
+  int? totalChargingDuration;
+  DateTime? lastChargingSessionStart;
+  DateTime? lastChargingSessionEnd;
+  double? averageChargingPower;
+  int? numberOfSessions;
   int? socStart;
   int? socEnd;
   double? latitude;
@@ -32,10 +37,15 @@ class ChargeSessionDto {
     this.chargeType,
     this.mileage,
     this.tripLength,
-    this.kwhCharged,
+    this.quantityChargedKwh,
     this.chargedKwPaid,
     this.costOfCharge,
     this.bcConsumption,
+    this.totalChargingDuration,
+    this.lastChargingSessionStart,
+    this.lastChargingSessionEnd,
+    this.averageChargingPower,
+    this.numberOfSessions,
     this.socStart,
     this.socEnd,
     this.latitude,
@@ -49,16 +59,21 @@ class ChargeSessionDto {
 
     vehicleVin = json['vehicleVin'] ?? '';
     chargingStatus = json['chargingStatus'] ?? '';
-    timestamp = DateTime.tryParse(json['timestamp'] ?? '')!;
+    timestamp = DateTime.tryParse(json['timestamp'] ?? '');
     startOfChargeDate = DateTime.tryParse(json['startOfCharge'] ?? '');
     endOfChargeDate = DateTime.tryParse(json['endOfCharge'] ?? '');
     chargeProvider = json['chargeProvider'] ?? '';
-    chargeType = json['chargeTyp'] ?? '';
+    chargeType = json['chargeType'] ?? '';
     mileage = json['mileage'];
     tripLength = json['distance'];
-    kwhCharged = json['quantityChargedKwh'] ?? 0;
+    quantityChargedKwh = json['quantityChargedKwh'] ?? 0;
     costOfCharge = json['price'] ?? 0;
     bcConsumption = json['bcConsumption'] ?? 0;
+    totalChargingDuration = json['totalChargingDuration'] ?? 0;
+    lastChargingSessionStart = DateTime.tryParse(json['lastChargingSessionStart'] ?? '');
+    lastChargingSessionEnd = DateTime.tryParse(json['lastChargingSessionEnd'] ?? '');
+    averageChargingPower = json['averageChargingPower'] ?? 0;
+    numberOfSessions = json['numberOfSessions'] ?? 0;
     socStart = json['socStart'];
     socEnd = json['socEnd'];
     chargedKwPaid = json['chargedKwPaid'] ?? 0;
@@ -74,12 +89,17 @@ class ChargeSessionDto {
     'startOfCharge': startOfChargeDate?.toIso8601String(),
     'endOfCharge': endOfChargeDate?.toIso8601String(),
     'chargeProvider': chargeProvider,
-    'chargeTyp': chargeType,
+    'chargeType': chargeType,
     'mileage': mileage,
     'distance': tripLength,
-    'quantityChargedKwh': kwhCharged,
+    'quantityChargedKwh': quantityChargedKwh,
     'price': costOfCharge,
     'bcConsumption': bcConsumption,
+    'totalChargingDuration': totalChargingDuration,
+    'lastChargingSessionStart': lastChargingSessionStart?.toIso8601String(),
+    'lastChargingSessionEnd' : lastChargingSessionEnd?.toIso8601String(),
+    'averageChargingPower': averageChargingPower,
+    'numberOfSessions': numberOfSessions,
     'socStart': socStart,
     'socEnd': socEnd,
     'chargedKwPaid': chargedKwPaid,

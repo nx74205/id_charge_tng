@@ -168,6 +168,7 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                     TextButton(
                       child: const Text('OK'),
                       onPressed: () {
+                        _isLocked = false;
                         _saveData(syncNow: true);
                         Navigator.popUntil(context, ((route) {
                           if (route.settings.name == '/') {

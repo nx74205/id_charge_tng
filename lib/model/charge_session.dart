@@ -16,8 +16,8 @@ class ChargeSession {
   late String chargeProvider;
   late String chargeType;
   late String mileage;
-  late String tripLength;
-  late String kwhCharged;
+  late String distance;
+  late String quantityChargedKwh;
   late String costOfCharge;
   late String chargedKwPaid;
   late String kwhChargedInternal;
@@ -39,8 +39,8 @@ class ChargeSession {
     required this.chargeProvider,
     required this.chargeType,
     required this.mileage,
-    required this.tripLength,
-    required this.kwhCharged,
+    required this.distance,
+    required this.quantityChargedKwh,
     required this.costOfCharge,
     required this.chargedKwPaid,
     required this.kwhChargedInternal,
@@ -65,8 +65,8 @@ class ChargeSession {
     this.chargeProvider = chargeSessionDto.chargeProvider!;
     this.chargeType = chargeSessionDto.chargeType!;
     this.mileage = numFormat.format(chargeSessionDto.mileage);
-    this.tripLength = (chargeSessionDto.tripLength != null ? chargeSessionDto.tripLength.toString() : '');
-    this.kwhCharged = numFormat.format(chargeSessionDto.kwhCharged);
+    this.distance = (chargeSessionDto.tripLength != null ? chargeSessionDto.tripLength.toString() : '');
+    this.quantityChargedKwh = numFormat.format(chargeSessionDto.quantityChargedKwh);
     this.chargedKwPaid = '${numFormat.format(chargeSessionDto.chargedKwPaid)} €';
     this.costOfCharge = '${numFormat.format(chargeSessionDto.costOfCharge)} €';
     this.bcConsumption = '${numFormat.format(chargeSessionDto.bcConsumption)} kWh';
@@ -88,8 +88,8 @@ class ChargeSession {
       chargeProvider: chargeProvider,
       chargeType: chargeType,
       mileage: int.parse(mileage),
-      tripLength: int.tryParse(tripLength),
-      kwhCharged: double.parse(kwhCharged),
+      tripLength: int.tryParse(distance),
+      quantityChargedKwh: double.parse(quantityChargedKwh),
       chargedKwPaid: double.parse(chargedKwPaid),
       costOfCharge: double.parse(costOfCharge),
       bcConsumption: double.parse(bcConsumption),

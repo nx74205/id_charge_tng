@@ -34,7 +34,7 @@ class _ChargeSessionCardState extends State<ChargeSessionCard> {
 
     List<ChargeDisplayValue> chargeDisplayValues = [
       ChargeDisplayValue(displayText: 'Km-Stand', displayValue: chargeSession.mileage),
-      ChargeDisplayValue(displayText: 'Trip', displayValue: chargeSession.tripLength),
+      ChargeDisplayValue(displayText: 'Trip', displayValue: chargeSession.distance),
       ChargeDisplayValue(displayText: 'kWh', displayValue: chargeSession.chargedKwPaid),
       ChargeDisplayValue(displayText: 'Kosten', displayValue: chargeSession.costOfCharge),
       ChargeDisplayValue(displayText: 'BC /100 Km', displayValue: chargeSession.bcConsumption),
