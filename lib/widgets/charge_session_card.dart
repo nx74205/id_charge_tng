@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
-import 'package:id_charge/model/charge_display_value.dart';
-import 'package:id_charge/model/charge_session.dart';
-import 'package:id_charge/services/mqtt/MQTT_Manager.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:id_charge_tng/model/charge_display_value.dart';
+import 'package:id_charge_tng/model/charge_session.dart';
+import 'package:id_charge_tng/services/mqtt/MQTT_Manager.dart';
 
 import '../model/charge_session_dto.dart';
 import '../services/DatabaseService.dart';

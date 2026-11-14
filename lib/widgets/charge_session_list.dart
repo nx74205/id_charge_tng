@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:id_charge/model/charge_session.dart';
 import 'package:id_charge/services/DatabaseService.dart';
 import 'package:id_charge/widgets/charge_session_card.dart';

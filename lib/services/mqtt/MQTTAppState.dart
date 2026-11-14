@@ -1,5 +1,5 @@
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:id_charge_tng/model/charge_session_dto.dart';
 
 enum MQTTAppConnectionState {connected, disconnected, connecting, notConfigured}

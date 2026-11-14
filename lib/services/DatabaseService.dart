@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:id_charge/model/charge_session_dto.dart';
+import 'package:id_charge_tng/model/charge_session_dto.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:sqflite/sqlite_api.dart';
+//import 'package:sqflite/sqlite_api.dart';
 
 class DatabaseService {
 

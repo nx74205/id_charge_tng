@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
-import 'package:id_charge/model/charge_session_dto.dart';
-import 'package:id_charge/services/charge_session_service.dart';
+import 'package:id_charge_tng/model/charge_session_dto.dart';
+import 'package:id_charge_tng/services/charge_session_service.dart';
 import 'package:intl/intl.dart';
 import 'package:date_field/date_field.dart';
 
