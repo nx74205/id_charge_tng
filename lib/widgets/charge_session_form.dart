@@ -204,7 +204,6 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                   SizedBox(height: 20),
                   DateTimeFormField(
                     decoration: InputDecoration(
-                      enabled: !_isLocked,
                       filled: true,
                       fillColor: Colors.white,
                       border: const OutlineInputBorder(),
@@ -212,7 +211,7 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                       prefixIcon: const Icon(
                               color: Colors.blue,
                               Icons.calendar_today_rounded
-                            )
+                            ),
                     ),
                     initialValue: _data?.startOfChargeDate,
                     dateFormat: dateFormat,
