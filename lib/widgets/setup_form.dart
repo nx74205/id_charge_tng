@@ -1,6 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
-import 'package:id_charge/model/mqtt_credentials.dart';
+import 'package:id_charge_tng/model/mqtt_credentials.dart';
 
 import '../services/mqtt/MQTTAppState.dart';
 import '../services/mqtt/MQTT_Manager.dart';

@@ -1,9 +1,10 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:id_charge_tng/model/charge_session_dto.dart';
 import 'package:id_charge_tng/services/charge_session_service.dart';
 import 'package:intl/intl.dart';
 import 'package:date_field/date_field.dart';
+
 
 class ChargeSessionForm extends StatefulWidget {
   const ChargeSessionForm({super.key});
@@ -205,13 +206,14 @@ class _ChargeSessionFormState extends State<ChargeSessionForm> {
                   DateTimeFormField(
                     decoration: InputDecoration(
                       filled: true,
+                      enabled: !_isLocked,
                       fillColor: Colors.white,
                       border: const OutlineInputBorder(),
                       label: const Text('Start Ladesession'),
                       prefixIcon: const Icon(
-                              color: Colors.blue,
-                              Icons.calendar_today_rounded
-                            ),
+                          color: Colors.blue,
+                          Icons.calendar_today_rounded
+                      ),
                     ),
                     initialValue: _data?.startOfChargeDate,
                     dateFormat: dateFormat,
