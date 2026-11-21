@@ -1,4 +1,4 @@
-package com.example.id_charge_tng
+package de.kiwifans.id_charge
 
 import io.flutter.embedding.android.FlutterActivity
 
